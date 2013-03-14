@@ -29,6 +29,8 @@
       immediate = function(func) {
         return setTimeout(func, 0);
       };
+    } else {
+      immediate = global[immediate];
     }
   }
 
