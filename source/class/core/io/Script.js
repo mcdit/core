@@ -8,9 +8,6 @@
 
 "use strict";
 
-/**
- * #require(ext.DateNow)
- */
 (function(global)
 {
 	var doc = global.document;
@@ -27,6 +24,20 @@
 		elem.onload = elem.onerror = elem.onreadystatechange = value;		
 	};
 
+	// If native, try to use importScripts; if not available shim importScripts via use of eval and readFileSync.
+	if (jasy.Env.isSet("runtime", "native"))
+	{
+		var importScripts = global.importScripts ? global.importScripts : (function() {
+			var Fs = require("fs");
+			return function() {
+				for (var i=0,ii=arguments.length; i<ii; i++) {
+					var uri = arguments[i];
+					eval("//@ sourceURL=" + uri + "\n" + Fs.readFileSync(uri, "utf-8"));
+				}
+			}
+		})();
+	}
+
 	/**
 	 * Generic script loader for features. Could be used for loading feature/class packages after initial load.
 	 *
@@ -36,6 +47,9 @@
 	{
 		/** Whether the loader supports parallel requests */
 		SUPPORTS_PARALLEL : supportsScriptAsync || jasy.Env.isSet("engine", "gecko") || jasy.Env.isSet("engine", "opera"),
+		
+		/** {String|null} URL prefix to prepend to given relative URL. Used by worker script loading */
+		URL_PREFIX : null,
 
 
 		/**
@@ -68,18 +82,30 @@
 			// Browser-less (e.g. NodeJS) support
 			if (jasy.Env.isSet("runtime", "native"))
 			{
-			  eval("//@ sourceURL=" + uri + "\n" + require("fs").readFileSync(uri, "utf-8"));
-			  if (callback) {
-			  	callback.call(context||global, uri, false);
-			  }
-
-			  return;
+				importScripts(uri);
+				if (callback) {
+					callback.call(context||global, uri, false);
+				}
+				
+				return;
+			}
+			else if (jasy.Env.isSet("runtime", "worker"))
+			{
+				if (core.io.Script.URL_PREFIX != null && uri[0] != "/" && uri.indexOf(":/") < 0) {
+					uri = core.io.Script.URL_PREFIX + uri;
+				}
+				try {
+					importScripts(uri);
+				} catch (e) {
+					e.fileName = uri;
+					throw e;
+				}
+				if (callback) {
+					callback.call(context||global, uri, false);
+				}
 			}
 			else
 			{
-				/**
-				 * #require(ext.DocumentHead)
-				 */
 				var head = doc.head;
 				var elem = doc.createElement("script");
 

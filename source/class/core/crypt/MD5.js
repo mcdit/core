@@ -24,12 +24,18 @@
 		/**
 		 * {String} Returns the MD5 checksum of the given @str {String} as a raw string.
 		 */
-		checksum : function(str) 
-		{ 
+		checksum : function(str) { 
+			return Util.byteArrayToRawString(this.checksumAsByteArray(str));
+		},
+
+
+		/**
+		 * {Array} Returns the MD5 checksum of the given @str {String} as an byte array.
+		 */
+		checksumAsByteArray : function(str) 
+		{
 			str = StringUtil.encodeUtf8(str);
-			var md5 = binl_md5(Util.rawStringToLittleEndian(str), str.length * 8);
-			
-			return Util.littleEndianToRawString(md5);
+			return Util.littleEndianToByteArray(binl_md5(Util.rawStringToLittleEndian(str), str.length * 8));
 		},
 
 
@@ -207,4 +213,4 @@
 		return (num << cnt) | (num >>> (32 - cnt));
 	};
 	
-})(core.crypt.Util, core.util.String);
+})(core.crypt.Util, core.String);

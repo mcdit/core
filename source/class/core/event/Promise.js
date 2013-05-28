@@ -67,7 +67,7 @@ core.Class("core.event.Promise",
 				this.__state = "fulfilled";
 				this.__valueOrReason = value;
 
-				core.util.Function.immediate(this.__execute, this);
+				core.Function.immediate(this.__execute, this);
 			}
 		},
 		
@@ -83,14 +83,14 @@ core.Class("core.event.Promise",
 				this.__state = "rejected";
 				this.__valueOrReason = reason;
 
-				core.util.Function.immediate(this.__execute, this);
+				core.Function.immediate(this.__execute, this);
 			}
 		},
 
 	
 		/**
 		 * Executes a single fulfillment or rejection queue @entry {Array} 
-		 * with the give @valueOrReason {any} and state {String}.
+		 * with the give @valueOrReason {any} and @state {String}.
 		 */	
 		__executeEntry : function(entry, valueOrReason, state) 
 		{
@@ -160,7 +160,7 @@ core.Class("core.event.Promise",
 			}
 
 			// Auto release promise after fulfill/reject and all handlers being processed
-			core.util.Function.immediate(this.release, this);
+			core.Function.immediate(this.release, this);
 		},
 
 
@@ -182,8 +182,8 @@ core.Class("core.event.Promise",
 		
 
 		/**
-		 * {core.event.Promise} Register fulfillment handler {function} @onFulfilled 
-		 * and rejection handler {function} @onRejected returning new child promise.
+		 * {core.event.Promise} Register fulfillment handler @onFulfilled {Function}
+		 * and rejection handler @onRejected {Function} returning new child promise.
 		 */
 		then : function(onFulfilled, onRejected, context) 
 		{

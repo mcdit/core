@@ -71,12 +71,17 @@
 			// 1: name, 1, test, [val1, val2]
 			// 2: name, 2, value
 			// 3: name, 3, test, default (not permutated)
+			// 4: name, 4, value (not permutated)
 
 			var name = field[0];
 			var type = field[1];
 			if (type == 1 || type == 3)
 			{
 				var test = field[2];
+				if (!test) {
+					throw new Error("[jasy.Env]: Detection class for field " + name + " is not available!");
+				}
+
 				var value = "VALUE" in test ? test.VALUE : test.get(name);
 				var third = field[3];
 
@@ -100,7 +105,7 @@
 			selected[name] = value;
 
 			// Only add permutated fields to the permutated map.
-			if (type != 3) 
+			if (type == 1 || type == 2) 
 			{
 				permutated[name] = value;
 				checksum = null;
@@ -109,11 +114,10 @@
 
 
 		/**
-		 * {String} Returns the SHA1 checksum of the current permutated field set.
-		 * This checksum computition is compatatible with the Jasy approach for
-		 * computing it.
+		 * {String} Returns the SHA1/Base62 checksum of the current permutated field set and build revision.
+		 * This checksum is compatatible with the Jasy approach for computing it.
 		 */
-		getChecksum : function()
+		getId : function()
 		{
 			if (checksum != null) {
 				return checksum;
@@ -133,8 +137,13 @@
 				list.push(name + ":" + permutated[name]);
 			}			
 
-			var sha1 = core.crypt.SHA1.checksum(list.join(";"));
-			return checksum = core.crypt.Util.toHex(sha1);
+			var key = list.join(";");
+			var rev = selected["jasy.build.rev"];
+			if (rev) {
+				key += "@" + rev;
+			}
+
+			return core.util.Base62.encodeArrayToString(core.crypt.SHA1.checksumAsByteArray(key));
 		},
 
 

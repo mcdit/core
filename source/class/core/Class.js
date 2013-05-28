@@ -10,6 +10,8 @@
 
 (function(undef) 
 {
+	var supportsSeal = !!Object.seal;
+
 	var genericToString = function() {
 		return "[class " + this.className + "]";
 	};
@@ -55,7 +57,7 @@
 			for (var i=0, l=include.length; i<l; i++) 
 			{
 				var includedClass = include[i];
-				var includedMembers = Object.keys(includedClass.prototype);
+				var includedMembers = core.Object.getKeys(includedClass.prototype);
 
 				for(var j=0, jl=includedMembers.length; j<jl; j++) 
 				{
@@ -153,12 +155,7 @@
 			}
 			
 			core.Assert.isType(config, "Map", "Invalid class configuration in " + name);
-			
-			/** #require(ext.sugar.Object) */
-			var invalidKeys = Object.validateKeys(config, "construct,pooling,events,members,properties,include,implement".split(","));
-			if (invalidKeys.length > 0) {
-				throw new Error("Class declaration of " + name + " contains invalid configuration keys: " + invalidKeys.join(", ") + "!");
-			}
+			core.Assert.doesOnlyHaveKeys(config, "construct,pooling,events,members,properties,include,implement", "Unallowed keys in class: " + name);
 			
 			if ("construct" in config) {
 				core.Assert.isType(config.construct, "Function", "Invalid constructor in class " + name + "!");
@@ -462,6 +459,11 @@
 		
 		// Attach to namespace
 		core.Main.declareNamespace(name, construct);
+
+		// Prevent changes in prototype
+		if (jasy.Env.isSet("debug") && supportsSeal) {
+			Object.seal(construct.prototype);
+		}
 	});
 
 	
@@ -487,13 +489,6 @@
 		}
 	};
 
-
-	// Enforce loading of ES5 array fixes if required
-	if (!jasy.Env.isSet("es5")) 
-	{
-		/** #require(ext.es5.Array) #require(ext.es5.Date) #require(ext.es5.JSON) #require(ext.es5.Object) */
-		0;
-	}
 
 	core.Main.addStatics("core.Class", 
 	{

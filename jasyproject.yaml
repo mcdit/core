@@ -16,10 +16,18 @@ fields:
     check: Boolean
     default: false
     detect: core.detect.ES5
+  json:
+    check: Boolean
+    default: false
+    detect: core.detect.JSON    
   locale:
     check: String
     default: en
     detect: core.detect.Locale
+  touch:
+    check: Boolean
+    default: false
+    detect: core.detect.Touch
   platform:
     check:
     - win
@@ -29,6 +37,20 @@ fields:
   runtime:
     check:
     - browser
+    - worker
     - native
     default: browser
     detect: core.detect.Runtime
+  device:
+    check:
+    - desktop
+    - tablet
+    - phone
+    - other
+    default: other
+    detect: core.detect.Device
+  highres:
+    check: Boolean
+    default: false
+    detect: core.detect.HighRes
+

@@ -145,7 +145,7 @@ core.Class('core.apibrowser.Browser',
 		 */
 		callback: function(data, id) {
 
-			if (core.util.String.endsWith(id, ".mustache")) {
+			if (core.String.endsWith(id, ".mustache")) {
 
 				var templateName = id.substring(0, id.indexOf(".mustache"));
 				this.__tmpl[templateName] = core.template.Compiler.compile(data.template, true);
@@ -208,7 +208,7 @@ core.Class('core.apibrowser.Browser',
 				return a == b ? 0 : a > b ? 1 : -1;
 			};
 
-			var keys = Object.keys(node).filter(filter).sort(comparator);
+			var keys = core.Object.getKeys(node).filter(filter).sort(comparator);
 
 			for (var i=0, l=keys.length; i<l; i++) {
 
