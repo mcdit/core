@@ -1,6 +1,5 @@
 var suite = new core.testrunner.Suite("Promises");
 
-
 suite.test("successful promises", function() {
 
   var promise = core.event.Promise.obtain();
@@ -412,3 +411,36 @@ suite.test("flow pipe (rejected)", function() {
   promise1.fulfill(1);
   
 }, 3, 1000);
+
+suite.test("auto release without then set", function() {
+  var err = function(e) {
+    console.error("Error in Promise ", e);
+  };
+
+  var p1 = core.event.Promise.obtain();
+
+  var p3 = p1.then(function(value) {
+    this.isIdentical(value, "A");
+
+    return "NEWA";
+  }, err, this);
+  p1.fulfill("A");
+
+  core.Function.timeout(function() {
+    var p2 = core.event.Promise.obtain();
+    p2.fulfill("Z");
+
+    p1.then(function(value) {
+      this.isIdentical(value, "A");
+    }, err, this);
+
+    p2.then(function(value) {
+      this.isIdentical(value, "Z");
+    }, err, this);
+
+    p3.then(function(value) {
+      this.isIdentical(value, "NEWA");
+      this.done();
+    }, err, this);
+  }, this, 50);
+}, 4, 1000);

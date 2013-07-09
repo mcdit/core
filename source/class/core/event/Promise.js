@@ -14,7 +14,7 @@
  */
 core.Class("core.event.Promise", 
 {
-	pooling : true,
+	// DISABLE POOLING pooling : true,
 	
 	construct : function() 
 	{
@@ -24,6 +24,11 @@ core.Class("core.event.Promise",
 			this.__onFulfilledQueue = [];
 			this.__onRejectedQueue = [];
 		}
+
+		this.release();
+
+		this.__isReleased = false;
+		this.__queuePointer = 0;
 	},
 	
 	members : 
@@ -87,7 +92,7 @@ core.Class("core.event.Promise",
 			}
 		},
 
-	
+
 		/**
 		 * Executes a single fulfillment or rejection queue @entry {Array} 
 		 * with the give @valueOrReason {any} and @state {String}.
@@ -155,12 +160,13 @@ core.Class("core.event.Promise",
 			var valueOrReason = this.__valueOrReason;
 
 			// Always repeat queue length check as queue could be changed within handler
-			for (var i=0; i<queue.length; i++) {
+			for (var i=this.__queuePointer; i<queue.length; i++) {
 				this.__executeEntry(queue[i], valueOrReason, state);
 			}
+			this.__queuePointer = queue.length;
 
 			// Auto release promise after fulfill/reject and all handlers being processed
-			core.Function.immediate(this.release, this);
+			// DISABLE POOLING core.Function.immediate(this.release, this);
 		},
 
 
@@ -175,9 +181,11 @@ core.Class("core.event.Promise",
 			// Cleanup internal state
 			this.__state = "pending";
 			this.__locked = false;
+			this.__isReleased = true;
+			this.__persistent = false;
 
 			// Release for next usage
-			core.event.Promise.release(this);
+			// DISABLE POOLING core.event.Promise.release(this);
 		},
 		
 
@@ -187,6 +195,10 @@ core.Class("core.event.Promise",
 		 */
 		then : function(onFulfilled, onRejected, context) 
 		{
+			if (this.__isReleased) {
+				throw new Error("Promise is released, so no then possible " + core.util.Id.get(this));
+			}
+
 			var child = core.event.Promise.obtain();
 
 			var fullfilledQueue = this.__onFulfilledQueue;
@@ -203,9 +215,18 @@ core.Class("core.event.Promise",
 			} else {
 				rejectedQueue.push([child]);
 			}
-			
+
+			if (this.__locked) {
+				core.Function.immediate(this.__execute, this);
+			}
+
 			return child;
 		}
 	}
 });
 
+core.Main.addStatics("core.event.Promise", {
+	obtain : function() {
+		return new core.event.Promise;
+	}
+}, true);
